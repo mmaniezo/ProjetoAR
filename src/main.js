@@ -1,50 +1,62 @@
 import * as THREE from 'three';
-import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.7/dist/mindar-image-three.prod.js';
+import * as LocAR from 'locar';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-const init = async () => {
-  const { renderer, scene, camera } = new MindARThree({
-    container: document.body,
-    uiLoading: false,
-    uiError: false,
-    uiScanning: false,
-  });
+// Setup da cena, câmera e renderizador
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-  const modelUrl = 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb';
+// Responsividade
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+});
 
-  const loader = new THREE.GLTFLoader();
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  scene.add(light);
+// Inicia LocAR
+const locar = new LocAR.LocationBased(scene, camera);
+const cam = new LocAR.WebcamRenderer(renderer);
 
-  // Define a coordenada geográfica fixa para renderizar
-  const targetLatitude = -23.732778;
-  const targetLongitude = -46.556667;
+// Coordenadas reais do seu projeto
+const latitude = -23.732778;
+const longitude = -46.556667;
 
-  // Obter a localização do usuário
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
+// Adiciona luz
+const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+scene.add(light);
 
-    // Calcular distância (simples, para teste)
-    const distance = Math.sqrt(
-      Math.pow(userLat - targetLatitude, 2) + Math.pow(userLng - targetLongitude, 2)
-    );
+// Carrega o modelo 3D (modelo do abacate como teste)
+const loader = new GLTFLoader();
+loader.load(
+  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb',
+  (gltf) => {
+    const model = gltf.scene;
+    model.scale.set(10, 10, 10);
+    model.rotation.y = Math.PI; // gira o modelo
+    locar.add(model, longitude, latitude);
+  },
+  undefined,
+  (error) => {
+    console.error('Erro ao carregar o modelo:', error);
+  }
+);
 
-    // Se estiver perto o suficiente, mostra o objeto
-    if (distance < 0.01) {
-      loader.load(modelUrl, (gltf) => {
-        const model = gltf.scene;
-        model.scale.set(15, 15, 15);
-        model.position.set(0, 0, -2);
-        scene.add(model);
-      });
-    } else {
-      console.warn('Você está longe da coordenada definida.');
-    }
-  });
+// Ativa localização real
+navigator.geolocation.getCurrentPosition(
+  (position) => {
+    locar.fakeGps(position.coords.longitude, position.coords.latitude); // usa a localização real
+  },
+  (err) => {
+    console.warn('Erro com localização real, usando fake GPS.');
+    locar.fakeGps(longitude, latitude); // fallback
+  }
+);
 
-  await renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-  });
-};
-
-init();
+// Loop de animação
+renderer.setAnimationLoop(() => {
+  cam.update();
+  renderer.render(scene, camera);
+});
