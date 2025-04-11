@@ -34,13 +34,10 @@ loader.load(
   'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb',
   (gltf) => {
     const model = gltf.scene;
-    model.scale.set(10, 10, 10);
-    model.rotation.y = Math.PI; // gira o modelo
-    locar.add(model, longitude, latitude);
-  },
-  undefined,
-  (error) => {
-    console.error('Erro ao carregar o modelo:', error);
+    model.scale.set(2, 2, 2);
+    model.rotation.y = Math.PI;
+    model.position.set(0, 0, -3);
+    locar.add(model, modelLng, modelLat);
   }
 );
 
