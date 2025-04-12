@@ -23,8 +23,8 @@ const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
 
 // Coordenadas reais do objeto
-const lat = -23.732778;
-const lng = -46.556667;
+//const lat = -23.732778;
+//const lng = -46.556667;
 
 // Iniciar leitura GPS
 locar.startGps();
@@ -38,13 +38,11 @@ loader.load(
     model.scale.set(50, 50, 50); // maior escala
     model.rotation.y = Math.PI;
 
-    locar.add(model, lng, lat); // posiciona no mundo real
-  },
-  undefined,
-  (error) => {
-    console.error('Erro ao carregar modelo:', error);
+     // posiciona no mundo real
   }
 );
+locar.startGps();
+locar.add(model, -0.72, 51.0501);
 
 renderer.setAnimationLoop(() => {
   deviceOrientationControls.update();
