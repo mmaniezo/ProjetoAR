@@ -8,7 +8,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Redimensiona com a tela
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -20,25 +19,29 @@ const locar = new LocAR.LocationBased(scene, camera);
 const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
 
-// Simula GPS do usuário
-locar.fakeGps(-0.720000, 51.050000); // sua posição simulada
+// 🎯 Simula a posição do usuário (ex: -0.72, 51.05)
+locar.fakeGps(-0.720000, 51.050000);
 
-// Carregar modelo GLB
+// Carrega modelo 3D (abacate de exemplo ou outro objeto maior)
 const loader = new GLTFLoader();
 loader.load(
-  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
+  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb',
   (gltf) => {
     const model = gltf.scene;
-    model.scale.set(50, 50, 50);
-    model.rotation.y = Math.PI;
+    model.scale.set(100, 100, 100); // bem maior para facilitar visualização
 
-    // Posiciona objeto 10 metros à frente (~0.0001 na longitude)
+    // Posiciona o modelo a cerca de 10 metros de distância (0.0001 em longitude)
     locar.add(model, -0.720000, 51.050100);
+  },
+  undefined,
+  (error) => {
+    console.error('Erro ao carregar modelo:', error);
   }
 );
 
+// Render loop
 renderer.setAnimationLoop(() => {
-  deviceOrientationControls.update();
-  cam.update();
+  deviceOrientationControls.update(); // atualiza rotação do dispositivo
+  cam.update(); // atualiza câmera
   renderer.render(scene, camera);
 });
