@@ -3,20 +3,23 @@ import * as LocAR from 'locar';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 100);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 500); // maior distância visível
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Redimensionar
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
 
-const light = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+// Luz básica
+const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
 scene.add(light);
 
+// LocAR setup
 const locar = new LocAR.LocationBased(scene, camera);
 const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
@@ -33,23 +36,27 @@ loader.load(
     model.scale.set(50, 50, 50);
     model.rotation.y = Math.PI;
 
-    // Pega coordenadas do usuário
+    // Coordenadas do usuário
     navigator.geolocation.getCurrentPosition((position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
-      // Função para calcular novo ponto a 10 metros de distância na direção norte
+      // Calcular ponto 3 metros ao norte
       function offsetCoordinates(lat, lng, distanceMeters) {
         const earthRadius = 6378137;
         const dLat = distanceMeters / earthRadius;
         const newLat = lat + (dLat * (180 / Math.PI));
-        return { lat: newLat, lng }; // Apenas deslocando para o norte
+        return { lat: newLat, lng };
       }
 
-      const { lat: targetLat, lng: targetLng } = offsetCoordinates(lat, lng, 10);
+      const { lat: targetLat, lng: targetLng } = offsetCoordinates(lat, lng, 3);
 
-      // Adiciona modelo nas coordenadas calculadas
+      // Adiciona o modelo na posição
       locar.add(model, targetLat, targetLng);
+
+      // Opcional: helper para visualização
+      const axes = new THREE.AxesHelper(2);
+      model.add(axes);
     });
   }
 );
