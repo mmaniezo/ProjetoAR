@@ -15,7 +15,7 @@ window.addEventListener("resize", () => {
 });
 
 // Iluminação
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
+//scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
 
 // LocAR setup
 const locar = new LocAR.LocationBased(scene, camera);
@@ -38,11 +38,11 @@ loader.load(
     model.scale.set(50, 50, 50); // maior escala
     model.rotation.y = Math.PI;
 
-     // posiciona no mundo real
+    locar.startGps();
+    locar.add(model, -0.72, 51.0501);// posiciona no mundo real
   }
 );
-locar.startGps();
-locar.add(model, -0.72, 51.0501);
+
 
 renderer.setAnimationLoop(() => {
   deviceOrientationControls.update();
