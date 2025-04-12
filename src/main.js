@@ -8,40 +8,52 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Atualiza tela ao redimensionar
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
 
-// 💡 Luz uniforme suave
-const ambientLight = new THREE.AmbientLight(0xffffff, 1); // luz branca e forte
-scene.add(ambientLight);
+const light = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+scene.add(light);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(0, 10, 10); // direção da luz
-scene.add(directionalLight);
-
-// 📷 AR + câmera
+const locar = new LocAR.LocationBased(scene, camera);
 const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
 
-// 📦 Carrega modelo e posiciona fixo à frente da câmera
+// Iniciar GPS
+locar.startGps();
+
+// Carregar modelo
 const loader = new GLTFLoader();
 loader.load(
   'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
   (gltf) => {
     const model = gltf.scene;
-    model.scale.set(2, 2, 2); // ajuste de tamanho
-    model.position.set(0, 0, -10); // 10 metros na frente da câmera
-    model.rotation.y = Math.PI; // rotação opcional
-    camera.add(model); // fixa o modelo à frente da câmera
-    scene.add(camera); // adiciona a câmera à cena
+    model.scale.set(50, 50, 50);
+    model.rotation.y = Math.PI;
+
+    // Pega coordenadas do usuário
+    navigator.geolocation.getCurrentPosition((position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      // Função para calcular novo ponto a 10 metros de distância na direção norte
+      function offsetCoordinates(lat, lng, distanceMeters) {
+        const earthRadius = 6378137;
+        const dLat = distanceMeters / earthRadius;
+        const newLat = lat + (dLat * (180 / Math.PI));
+        return { lat: newLat, lng }; // Apenas deslocando para o norte
+      }
+
+      const { lat: targetLat, lng: targetLng } = offsetCoordinates(lat, lng, 10);
+
+      // Adiciona modelo nas coordenadas calculadas
+      locar.add(model, targetLat, targetLng);
+    });
   }
 );
 
-// 🌀 Loop de renderização
 renderer.setAnimationLoop(() => {
   deviceOrientationControls.update();
   cam.update();
