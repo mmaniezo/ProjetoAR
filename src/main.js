@@ -13,6 +13,9 @@ window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
+// Luz ambiente (ilumina tudo de forma uniforme)
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // cor branca, intensidade 1
+scene.add(ambientLight);
 
 // LocAR setup
 const locar = new LocAR.LocationBased(scene, camera);
