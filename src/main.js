@@ -8,43 +8,42 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Atualiza tela ao redimensionar
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
-// Luz ambiente (ilumina tudo de forma uniforme)
-const ambientLight = new THREE.AmbientLight(0xffffff, 1); // cor branca, intensidade 1
+
+// 💡 Luz uniforme suave
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // luz branca e forte
 scene.add(ambientLight);
 
-// LocAR setup
-const locar = new LocAR.LocationBased(scene, camera);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(0, 10, 10); // direção da luz
+scene.add(directionalLight);
+
+// 📷 AR + câmera
 const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
 
-// 🎯 Simula a posição do usuário (ex: -0.72, 51.05)
-locar.fakeGps(-0.720000, 51.050000);
-
-// Carrega modelo 3D (abacate de exemplo ou outro objeto maior)
+// 📦 Carrega modelo e posiciona fixo à frente da câmera
 const loader = new GLTFLoader();
 loader.load(
-  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb',
+  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
   (gltf) => {
     const model = gltf.scene;
-    model.scale.set(100, 100, 100); // bem maior para facilitar visualização
-
-    // Posiciona o modelo a cerca de 10 metros de distância (0.0001 em longitude)
-    locar.add(model, -0.720000, 51.050100);
-  },
-  undefined,
-  (error) => {
-    console.error('Erro ao carregar modelo:', error);
+    model.scale.set(2, 2, 2); // ajuste de tamanho
+    model.position.set(0, 0, -10); // 10 metros na frente da câmera
+    model.rotation.y = Math.PI; // rotação opcional
+    camera.add(model); // fixa o modelo à frente da câmera
+    scene.add(camera); // adiciona a câmera à cena
   }
 );
 
-// Render loop
+// 🌀 Loop de renderização
 renderer.setAnimationLoop(() => {
-  deviceOrientationControls.update(); // atualiza rotação do dispositivo
-  cam.update(); // atualiza câmera
+  deviceOrientationControls.update();
+  cam.update();
   renderer.render(scene, camera);
 });
