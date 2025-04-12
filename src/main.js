@@ -14,33 +14,31 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
 });
 
-// Iluminação para modelos GLB
-const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-scene.add(light);
+// Iluminação
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
 
-// Inicializando LocAR
+// LocAR setup
 const locar = new LocAR.LocationBased(scene, camera);
 const cam = new LocAR.WebcamRenderer(renderer);
 const deviceOrientationControls = new LocAR.DeviceOrientationControls(camera);
 
-// Coordenadas do objeto (exemplo: São Paulo, pode ajustar)
-const modelLat = -23.732778;
-const modelLng = -46.556667;
+// Coordenadas reais do objeto
+const lat = -23.732778;
+const lng = -46.556667;
 
-// Começa a ler GPS real
+// Iniciar leitura GPS
 locar.startGps();
 
-// Carrega o modelo GLB
+// Carregar modelo GLB maior
 const loader = new GLTFLoader();
 loader.load(
-  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Avocado/glTF-Binary/Avocado.glb',
+  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
   (gltf) => {
     const model = gltf.scene;
-    model.scale.set(10, 10, 10); // Ajuste de escala
-    model.rotation.y = Math.PI;  // Rotaciona o modelo (opcional)
+    model.scale.set(50, 50, 50); // maior escala
+    model.rotation.y = Math.PI;
 
-    // Adiciona nas coordenadas desejadas
-    locar.add(model, modelLng, modelLat);
+    locar.add(model, lng, lat); // posiciona no mundo real
   },
   undefined,
   (error) => {
